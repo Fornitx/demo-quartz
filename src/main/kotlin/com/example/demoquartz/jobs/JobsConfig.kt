@@ -11,6 +11,26 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import java.time.Duration
+
+private inline fun <reified T : Job> newJobDetail(name: String) = JobBuilder
+    .newJob()
+    .ofType(T::class.java)
+    .storeDurably()
+    .withIdentity(name)
+    .build()
+
+private fun newTrigger(job: JobDetail, name: String, interval: Duration) = TriggerBuilder
+    .newTrigger()
+    .forJob(job)
+    .withIdentity(name)
+    .withSchedule(
+        SimpleScheduleBuilder
+            .simpleSchedule()
+            .repeatForever()
+            .withIntervalInMilliseconds(interval.toMillis())
+    )
+    .build()
 
 @Configuration
 class JobsConfig {
@@ -19,13 +39,7 @@ class JobsConfig {
     class Job1Config {
         @Bean
         fun jobDetail1(): JobDetail {
-            return JobBuilder
-                .newJob()
-                .ofType(DemoJob1::class.java)
-                .storeDurably()
-                .withIdentity("Qrtz_Job1_Detail")
-                .withDescription("Invoke Sample Job service...")
-                .build()
+            return newJobDetail<DemoJob1>("Qrtz_JobDetail1")
         }
 
         @Bean
@@ -40,16 +54,7 @@ class JobsConfig {
 
         @Bean
         fun trigger1(@Qualifier("jobDetail1") job: JobDetail, properties: DemoProperties): Trigger {
-            return TriggerBuilder
-                .newTrigger()
-                .forJob(job)
-                .withIdentity("Qrtz_Trigger1")
-                .withDescription("Sample trigger")
-                .withSchedule(SimpleScheduleBuilder
-                    .simpleSchedule()
-                    .repeatForever()
-                    .withIntervalInMilliseconds(properties.jobs.job1.interval.toMillis()))
-                .build()
+            return newTrigger(job, "Qrtz_Trigger1", properties.jobs.job1.interval)
         }
     }
 
@@ -58,13 +63,7 @@ class JobsConfig {
     class Job2Config {
         @Bean
         fun jobDetail2(): JobDetail {
-            return JobBuilder
-                .newJob()
-                .ofType(DemoJob2::class.java)
-                .storeDurably()
-                .withIdentity("Qrtz_Job2_Detail")
-                .withDescription("Invoke Sample Job service...")
-                .build()
+            return newJobDetail<DemoJob2>("Qrtz_JobDetail2")
         }
 
         @Bean
@@ -79,16 +78,7 @@ class JobsConfig {
 
         @Bean
         fun trigger2(@Qualifier("jobDetail2") job: JobDetail, properties: DemoProperties): Trigger {
-            return TriggerBuilder
-                .newTrigger()
-                .forJob(job)
-                .withIdentity("Qrtz_Trigger2")
-                .withDescription("Sample trigger")
-                .withSchedule(SimpleScheduleBuilder
-                    .simpleSchedule()
-                    .repeatForever()
-                    .withIntervalInMilliseconds(properties.jobs.job2.interval.toMillis()))
-                .build()
+            return newTrigger(job, "Qrtz_Trigger2", properties.jobs.job2.interval)
         }
     }
 }
