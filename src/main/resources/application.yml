@@ -1,0 +1,13 @@
+demo:
+  jobs:
+    job1:
+      enabled: true
+      interval: 2s
+    job2:
+      enabled: true
+      interval: 2s
+
+spring:
+  quartz:
+    properties:
+      org.quartz.threadPool.threadCount: 3
